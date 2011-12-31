@@ -1,19 +1,28 @@
-int startcnt = 1000;
+int startcnt = 100;
 ArrayList cells;
 ArrayList newcells;
 PImage img;
 float food[][];
 
+// String filename = "lena.png";
+String filename = "natalie.png";
+boolean inverted = true;
+
 void setup()
 {
   size(512,512);
-  img = loadImage("lena.png");
+  img = loadImage(filename);
   food = new float[512][512];
   for (int x = 0; x < 512; ++x)
     for (int y = 0; y < 512; ++y) {
       food[x][y] = ((img.pixels[x+y*512] >> 8) & 0xFF)/255.0;
+      if (inverted) food[x][y] = 1-food[x][y];
     }
-  background(0);
+  if (inverted) {
+    background(255);
+  } else {
+    background(0);
+  }
   cells = new ArrayList();
   newcells = new ArrayList();
   for (int i = 0; i < startcnt; ++i) {
@@ -59,7 +68,7 @@ class Cell {
     xpos = random(width);
     ypos = random(height);
     dir = random(2*PI);
-    state = feed(int(xpos),int(ypos), 0.5);
+    state = 0;
     active = true;
   }
   Cell(Cell c) {
@@ -72,16 +81,20 @@ class Cell {
   void draw() {
     if (!active) return;
     if (xpos >= 0 && xpos < width && ypos >= 0 && ypos < height) {
-      pixels[ int(xpos) + int(ypos) * width ] = color(state*255);
+      if (inverted) {
+        pixels[ int(xpos) + int(ypos) * width ] = color(255-state*255);
+      } else {
+        pixels[ int(xpos) + int(ypos) * width ] = color(state*255);
+      }
     }
   }
   void update()
   {
     if (!active) return;
     state += feed(int(xpos),int(ypos), 0.2) - 0.17;
-    if (state <= 0) active = false;
-    xpos += cos(dir)*0.5;
-    ypos += sin(dir)*0.5;
+    if (state < 0) active = false;
+    xpos += cos(dir);
+    ypos += sin(dir);
     dir += random(-0.3,0.3);
     if (state > 1) {
       divide();
