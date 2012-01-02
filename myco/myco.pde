@@ -1,4 +1,3 @@
-int startcnt = 100;
 ArrayList cells;
 ArrayList newcells;
 PImage img;
@@ -7,15 +6,16 @@ float food[][];
 // String filename = "lena.png";
 String filename = "natalie.png";
 boolean inverted = true;
+int ratio = 1;
 
 void setup()
 {
   size(512,512);
   img = loadImage(filename);
-  food = new float[512][512];
-  for (int x = 0; x < 512; ++x)
-    for (int y = 0; y < 512; ++y) {
-      food[x][y] = ((img.pixels[x+y*512] >> 8) & 0xFF)/255.0;
+  food = new float[width/ratio][height/ratio];
+  for (int x = 0; x < width/ratio; ++x)
+    for (int y = 0; y < height/ratio; ++y) {
+      food[x][y] = ((img.pixels[(x+y*512)*ratio] >> 8) & 0xFF)/255.0;
       if (inverted) food[x][y] = 1-food[x][y];
     }
   if (inverted) {
@@ -25,9 +25,10 @@ void setup()
   }
   cells = new ArrayList();
   newcells = new ArrayList();
-  for (int i = 0; i < startcnt; ++i) {
-    cells.add(new Cell());
-  }
+  Cell c = new Cell();
+  c.xpos = width/2;
+  c.ypos = height/2;
+  cells.add(c);
   frameRate(30);
 }
 
@@ -47,7 +48,9 @@ void draw()
 
 float feed(int x, int y, float thresh) {
   float r = 0.0;
-  if (x >= 0 && x < 512 && y >= 0 && y < 512) {
+  if (x >= 0 && x < width && y >= 0 && y < height) {
+    x /= ratio;
+    y /= ratio;
     if (food[x][y] > thresh) {
       r = thresh;
       food[x][y] -= thresh;
@@ -63,53 +66,48 @@ class Cell {
   float xpos, ypos;
   float dir;
   float state;
-  boolean active;
   Cell() {
     xpos = random(width);
     ypos = random(height);
     dir = random(2*PI);
     state = 0;
-    active = true;
   }
   Cell(Cell c) {
     xpos = c.xpos;
     ypos = c.ypos;
     dir = c.dir;
     state = c.state;
-    active = true;
   }
   void draw() {
-    if (!active) return;
-    if (xpos >= 0 && xpos < width && ypos >= 0 && ypos < height) {
+    if (state > 0.001 && xpos >= 0 && xpos < width && ypos >= 0 && ypos < height) {
       if (inverted) {
-        pixels[ int(xpos) + int(ypos) * width ] = color(255-state*255);
+        pixels[ int(xpos) + int(ypos) * width ] = color(0, 0, 0);
       } else {
-        pixels[ int(xpos) + int(ypos) * width ] = color(state*255);
+        pixels[ int(xpos) + int(ypos) * width ] = color(255, 255, 255);
       }
     }
   }
   void update()
   {
-    if (!active) return;
-    state += feed(int(xpos),int(ypos), 0.2) - 0.17;
-    if (state < 0) active = false;
+    state += feed(int(xpos),int(ypos), 0.3) - 0.295;
     xpos += cos(dir);
     ypos += sin(dir);
-    dir += random(-0.3,0.3);
-    if (state > 1) {
+    dir += random(-PI/4,PI/4);
+    if (state > 0.15 && cells.size() < 100) {
       divide();
+    } else
+    if (state < 0) {
+      xpos += random(-15,+15);
+      ypos += random(-15,+15);
+      state = 0.001;
     }
   }
   void divide() {
-      Cell c1 = new Cell(this);
-      Cell c2 = new Cell(this);
-      c1.state /= 2;
-      c2.state /= 2;
-      float dd = random(0.3);
-      c1.dir += dd;
-      c2.dir -= dd;
-      newcells.add(c1);
-      newcells.add(c2);
-      active = false;
+      state /= 2;
+      Cell c = new Cell(this);
+      float dd = random(PI/4);
+      dir += dd;
+      c.dir -= dd;
+      newcells.add(c);
   }
 }
