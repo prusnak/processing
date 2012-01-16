@@ -1,11 +1,13 @@
 ArrayList<Ent> ents;
 
+int curveID = 0;
+
 void setup()
 {
   size(400,400);
   frameRate(60);
-  noFill();
-  strokeWeight(3);
+  fill(0,192);
+  noStroke();
   ents = new ArrayList<Ent>();
 }
 
@@ -21,15 +23,17 @@ void draw()
       i++;
     }
   }
-  for (i = 0; i < ents.size(); i++) {
-    ents.get(i).draw();
+  for (i = 0; i < ents.size()-1; i++) {
+    ents.get(i).draw(ents.get(i+1));
   }
 }
 
 class Ent {
   float x, y;
   float dx, dy;
+  float w;
   boolean dead;
+  int cid;
   Ent(float x, float y)
   {
     this.x = x;
@@ -38,6 +42,8 @@ class Ent {
     dx = x/d;
     dy = y/d;
     dead = false;
+    w = 4;
+    cid = curveID;
   }
   void calc()
   {
@@ -45,15 +51,21 @@ class Ent {
     y += dy;
     if (abs(x)>width || abs(y)>height) dead = true;
   }
-  void draw()
+  void draw(Ent n)
   {
-    line(x+width/2-dx*4,y+height/2-dy*4,x+width/2+dx*4,y+height/2+dy*4);
+    if (cid != n.cid) return;
+    beginShape();
+    vertex(x+width/2-dx*w,y+height/2-dy*w);
+    vertex(x+width/2+dx*w,y+height/2+dy*w);
+    vertex(n.x+width/2+n.dx*n.w,n.y+height/2+n.dy*n.w);
+    vertex(n.x+width/2-n.dx*n.w,n.y+height/2-n.dy*n.w);
+    endShape(CLOSE);
   }
 }
 
-void mousePressed()
+void mouseReleased()
 {
-  ents.add(new Ent(mouseX-width/2, mouseY-height/2));
+  curveID++;
 }
 
 void mouseDragged()
