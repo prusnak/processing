@@ -1,3 +1,5 @@
+import java.util.Iterator;
+
 ArrayList cells;
 ArrayList newcells;
 PImage img;
