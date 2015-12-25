@@ -14,11 +14,14 @@ void setup()
 {
   img = loadImage(filename);
   size(img.width, img.height);
-  food = new float[width/ratio][height/ratio];
-  for (int x = 0; x < width/ratio; ++x)
-    for (int y = 0; y < height/ratio; ++y) {
-      food[x][y] = ((img.pixels[(x+y*width)*ratio] >> 8) & 0xFF)/255.0;
-      if (inverted) food[x][y] = 1-food[x][y];
+  food = new float[width/ratio][height / ratio];
+  img.loadPixels();
+  for (int x = 0; x < width / ratio; ++x)
+    for (int y = 0; y < height / ratio; ++y) {
+      color pix = img.pixels[(x + y * width) * ratio];
+      int r = pix & 0xFF, g = (pix >> 8) & 0xFF, b = (pix >> 16) & 0xFF;
+      food[x][y] = (r * 0.2126 + g * 0.7152 + b * 0.0722) / 255.0; // luma
+      if (inverted) food[x][y] = 1 - food[x][y];
     }
   if (inverted) {
     background(255);
@@ -28,8 +31,8 @@ void setup()
   cells = new ArrayList();
   newcells = new ArrayList();
   Cell c = new Cell();
-  c.xpos = width/2;
-  c.ypos = height/2;
+  c.xpos = width / 2;
+  c.ypos = height / 2;
   cells.add(c);
   frameRate(30);
 }
